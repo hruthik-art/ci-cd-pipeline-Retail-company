@@ -10,8 +10,9 @@ stages {
     }
     stage('Build and Test') {
       steps {
+        sh 'ls -ltr'
         // build the project and create a WAR file
-        sh 'mvn clean package'
+        sh 'cd ci-cd-pipeline-Retail-company && mvn clean package'
       }
     }
     stage('Static Code Analysis') {

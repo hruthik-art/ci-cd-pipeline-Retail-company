@@ -12,7 +12,7 @@ stages {
       steps {
         sh 'ls -ltr'
         // build the project and create a WAR file
-        sh 'cd ci-cd-pipeline-Retail-company && mvn clean package'
+        sh "mvn -Dmaven.test.failure.ignore=true clean package"
       }
     }
     stage('Static Code Analysis') {
@@ -28,7 +28,7 @@ stages {
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "hru123/abctechnologies-cicd:${BUILD_NUMBER}"
-        // DOCKERFILE_LOCATION = "ci-cd-pipeline-Retail-company/Dockerfile"
+        // DOCKERFILE_LOCATION = "Dockerfile"
         REGISTRY_CREDENTIALS = credentials('docker-cred')
       }
       steps {

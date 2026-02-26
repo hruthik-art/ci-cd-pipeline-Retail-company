@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: abc-app
+  labels:
+    app: abc-app
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: abc-app
+  template:
+    metadata:
+      labels:
+        app: abc-app
+    spec:
+      containers:
+      - name: abc-app
+        image: hru123/abctechnologies:latest
+        ports:
+        - containerPort: 8080

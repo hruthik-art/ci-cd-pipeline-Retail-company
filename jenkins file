@@ -15,22 +15,62 @@ stages {
         sh "mvn -Dmaven.test.failure.ignore=true clean package"
       }
     }
-    stage('Build and Push Docker Image') {
-      environment {
-        DOCKER_IMAGE = "hru123/abctechnologies-cicd:${BUILD_NUMBER}"
-        // DOCKERFILE_LOCATION = "Dockerfile"
-        REGISTRY_CREDENTIALS = credentials('docker-cred')
-      }
-      steps {
-        script {
-            sh 'docker build -t ${DOCKER_IMAGE} .'
-            def dockerImage = docker.image("${DOCKER_IMAGE}")
-            docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
-                dockerImage.push()
-            }
-        }
-      }
-    }
+    stage("Trivy File Scan"){
+steps{
+ sh "trivy fs .>trivy.txt"
+}
 }
 
+    stage('Build Docker Image') {             
+                steps { 
+                echo 'Build Docker Image' 
+                // Build the Docker image using the Dockerfile in the project 
+                // Tag the image with the current build number 
+                sh 'docker build -t hru123/abctechnologies:${BUILD_NUMBER} .' 
+            } 
+        } 
+         stage('Push to Docker Hub') {            
+             steps {                  
+               script { 
+                    // Use Dockerhub credentials to access Docker Hub 
+                    withCredentials([string(credentialsId: 'dockerhub', variable: 'dockerhub')]) {                       
+                     sh 'docker login -u hru123 -p ${dockerhub}' 
+                    } 
+                    // Push the Docker image to Docker Hub 
+                    sh 'docker push hru123/abctechnologies :${BUILD_NUMBER}'                    
+                     echo 'Pushed to Docker Hub' 
+                } 
+            } 
+        } 
+ 
+        stage('Update Deployment File') { 
+            environment { 
+                GIT_REPO_NAME = "ci-cd-pipeline-Retail-company" 
+                GIT_USER_NAME = "hruthik-art" 
+            }             
+               steps { 
+                echo 'Update Deployment File'                
+               
+                withCredentials([string(credentialsId: 'github', variable: 'github')]) {                      
+                         sh ''' 
+                         
+                        git config user.email "hruthikxxxxx@gmail.com"                        
+                        git config user.name "hruthik" 
+                         
+                        sed -i "s/abctechnologies:.*/abctechnologies:${BUILD_NUMBER}/g" deploymentfiles/deployment.yml
+                        
+                                              
+                            git add . 
+                         
+                        git commit -m "Update deployment image to version ${BUILD_NUMBER}" 
+                                     
+                     git push 
+                    https://${githubtoken}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master 
+                    
+                    ''' 
+                } 
 }
+}
+}
+}
+
